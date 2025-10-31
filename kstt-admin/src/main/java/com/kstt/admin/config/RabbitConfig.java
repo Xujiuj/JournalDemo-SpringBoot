@@ -49,7 +49,6 @@ public class RabbitConfig {
     @Bean
     public MessageConverter rabbitMessageConverter() {
         ObjectMapper objectMapper = new ObjectMapper();
-        // 注册 JavaTimeModule 支持 Java 8 时间类型
         objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
         return new Jackson2JsonMessageConverter(objectMapper);
     }

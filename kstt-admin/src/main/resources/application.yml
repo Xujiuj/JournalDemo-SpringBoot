@@ -76,6 +76,26 @@ spring:
     publisher-confirm-type: correlated
     publisher-returns: true
 
+  # 邮件配置
+  mail:
+    host: ${MAIL_HOST:smtp.qq.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:topjava@vip.qq.com}
+    password: ${MAIL_PASSWORD:azyhbhpztuaubegd}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    default-encoding: UTF-8
+    from: ${MAIL_FROM:}
+    personal: ${MAIL_PERSONAL:期刊管理系统}
+
   # CORS 跨域配置
   web:
     cors:
@@ -88,6 +108,13 @@ spring:
     multipart:
       max-file-size: 20MB
       max-request-size: 20MB
+
+# 文件上传配置
+file:
+  upload:
+    path: ${FILE_UPLOAD_PATH:./uploads}
+    max-size: ${FILE_UPLOAD_MAX_SIZE:20971520}  # 20MB
+    allowed-types: ${FILE_UPLOAD_ALLOWED_TYPES:pdf,doc,docx,zip}
 
 # 服务器配置
 server:
@@ -148,9 +175,11 @@ logging:
     file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
   file:
     name: logs/journal-admin.log
-    max-size: 100MB
-    max-history: 30
-    total-size-cap: 3GB
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 3GB
 
 # 监控端点配置
 management:
@@ -215,4 +244,13 @@ app:
     very-slow-threshold-ms: ${VERY_SLOW_THRESHOLD:3000}
     enable-method-monitor: ${ENABLE_PERF_MONITOR:true}
     enable-api-log: ${ENABLE_API_LOG:true}
+
+  # 邮件服务配置
+  mail:
+    enabled: ${MAIL_ENABLED:true}
+    article-submission:
+      enabled: ${MAIL_ARTICLE_SUBMISSION_ENABLED:true}
+      to: ${MAIL_ARTICLE_SUBMISSION_TO:}
+      cc: ${MAIL_ARTICLE_SUBMISSION_CC:}
+      subject: ${MAIL_ARTICLE_SUBMISSION_SUBJECT:投稿通知}
 

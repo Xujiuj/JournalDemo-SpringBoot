@@ -85,4 +85,12 @@ public interface ArticleMapper extends BaseMapper<Article> {
      * @return 文章集合
      */
     List<Article> selectArticleLastList(@Param("limits") Integer limits);
+
+    /**
+     * 根据稿件编号模式查询文章
+     *
+     * @param pattern 模式（如：JST-2025-%）
+     * @return 文章集合
+     */
+    List<Article> selectByManuscriptIdPattern(@Param("pattern") String pattern);
 }

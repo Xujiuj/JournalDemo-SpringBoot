@@ -1,11 +1,16 @@
 package com.kstt.admin.controller.articles;
 
+import com.kstt.admin.service.mail.EmailService;
 import com.kstt.articles.entity.Article;
+import com.kstt.articles.entity.ArticleAuthor;
 import com.kstt.articles.entity.ArticleSuggestedReviewer;
 import com.kstt.articles.entity.ArticleOpposedReviewer;
 import com.kstt.articles.service.ArticleService;
+import com.kstt.articles.service.ArticleAuthorService;
 import com.kstt.articles.service.ArticleSuggestedReviewerService;
 import com.kstt.articles.service.ArticleOpposedReviewerService;
+import com.kstt.common.core.domain.FileUtils;
+import com.kstt.sys.service.SysFileService;
 import com.kstt.common.annotation.Log;
 import com.kstt.common.core.controller.BaseController;
 import com.kstt.common.core.domain.AjaxResult;
@@ -25,8 +30,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -45,10 +51,19 @@ public class ArticleController extends BaseController {
     private ArticleService articleService;
 
     @Autowired
+    private ArticleAuthorService articleAuthorService;
+
+    @Autowired
+    private SysFileService sysFileService;
+
+    @Autowired
     private ArticleSuggestedReviewerService suggestedReviewerService;
 
     @Autowired
     private ArticleOpposedReviewerService opposedReviewerService;
+
+    @Autowired
+    private EmailService emailService;
 
     /**
      * 查询文章列表
@@ -177,32 +192,220 @@ public class ArticleController extends BaseController {
     }
 
     /**
+     * 创建文章（第一步：基本信息）
+     */
+    @Log(title = "创建文章", businessType = BusinessType.INSERT)
+    @PostMapping("/create")
+    @Operation(summary = "创建文章", description = "创建新文章基本信息，返回文章ID供后续文件上传使用")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "创建成功"),
+            @ApiResponse(responseCode = "400", description = "请求参数无效"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public AjaxResult createArticle(
+            @Parameter(description = "文章基本信息（JSON格式）", required = true)
+            @RequestBody Map<String, Object> params) {
+        try {
+            // 创建文章基本信息
+            Article article = new Article();
+            article.setArticleTitle((String) params.get("title"));
+            article.setArticleAbstract((String) params.get("abstract"));
+            article.setArticleKeywords((String) params.get("keywords"));
+            article.setArticleCoverLetter((String) params.get("coverLetter"));
+            
+            // 解析稿件类型
+            String manuscriptType = (String) params.get("manuscriptType");
+            if (manuscriptType != null) {
+                try {
+                    ArticleManuscriptTypeEnum typeEnum = ArticleManuscriptTypeEnum.valueOf(manuscriptType);
+                    article.setArticleManuscriptTypeId(typeEnum.getTypeId());
+                } catch (IllegalArgumentException e) {
+                    article.setArticleManuscriptTypeId(ArticleManuscriptTypeEnum.ORIGINAL_RESEARCH.getTypeId());
+                }
+            } else {
+                article.setArticleManuscriptTypeId(ArticleManuscriptTypeEnum.ORIGINAL_RESEARCH.getTypeId());
+            }
+            
+            // 设置状态为草稿（待上传文件）
+            article.setArticleStatusId(ArticleStatusEnum.SUBMITTED.getStatusId());
+            article.setArticleSubmissionTypeId(ArticleSubmissionTypeEnum.INITIAL_SUBMISSION.getTypeId());
+            
+            // 设置字数、图表数量等
+            if (params.get("wordCount") != null) {
+                article.setArticleWordCount(((Number) params.get("wordCount")).intValue());
+            }
+            if (params.get("figureCount") != null) {
+                article.setArticleFigureCount(((Number) params.get("figureCount")).intValue());
+            }
+            if (params.get("tableCount") != null) {
+                article.setArticleTableCount(((Number) params.get("tableCount")).intValue());
+            }
+            
+            // 设置学科领域（支持数组格式，转换为逗号分隔字符串）
+            if (params.get("subjectArea") instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<String> subjectAreas = (List<String>) params.get("subjectArea");
+                article.setArticleSubjectAreas(String.join(",", subjectAreas));
+            } else if (params.get("subjectArea") != null) {
+                article.setArticleSubjectAreas(params.get("subjectArea").toString());
+            }
+
+            // 设置提交时间
+            article.setArticleSubmitTime(LocalDateTime.now());
+
+            // 保存文章
+            int result = articleService.insertArticle(article);
+            if (result <= 0) {
+                return AjaxResult.error("Failed to create article");
+            }
+
+            return AjaxResult.success("Article created successfully", article);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return AjaxResult.error("Failed to create article: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新文章（第二步：保存文件信息）
+     */
+    @Log(title = "更新文章", businessType = BusinessType.UPDATE)
+    @PostMapping("/update")
+    @Operation(summary = "更新文章", description = "为已创建的文章添加文件信息，完成投稿")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "更新成功"),
+            @ApiResponse(responseCode = "400", description = "请求参数无效"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public AjaxResult updateArticle(
+            @Parameter(description = "文章更新信息（JSON格式）", required = true)
+            @RequestBody Map<String, Object> params) {
+        try {
+            // 获取文章ID
+            Long manuscriptId = params.get("manuscriptId") != null ? 
+                ((Number) params.get("manuscriptId")).longValue() : null;
+            
+            if (manuscriptId == null) {
+                return AjaxResult.error("Article ID is required");
+            }
+
+            // 获取文章信息
+            Article article = articleService.selectArticleByPaperId(manuscriptId);
+            if (article == null) {
+                return AjaxResult.error("Article not found");
+            }
+
+            // 保存文件信息
+            @SuppressWarnings("unchecked")
+            Map<String, Object> files = (Map<String, Object>) params.get("files");
+            
+            if (files != null) {
+                // 保存论文文件
+                @SuppressWarnings("unchecked")
+                Map<String, Object> paperFile = (Map<String, Object>) files.get("paper");
+                if (paperFile != null) {
+                    FileUtils fileUtils = new FileUtils();
+                    fileUtils.setFileName((String) paperFile.get("fileName"));
+                    fileUtils.setFilePath((String) paperFile.get("filePath"));
+                    fileUtils.setFileType(getFileExtension((String) paperFile.get("fileName")));
+                    fileUtils.setFileSize(paperFile.get("fileSize") != null ? 
+                        ((Number) paperFile.get("fileSize")).longValue() : null);
+                    
+                    sysFileService.save(fileUtils);
+                }
+
+                // 保存支撑材料文件
+                @SuppressWarnings("unchecked")
+                Map<String, Object> supportingFile = (Map<String, Object>) files.get("supporting");
+                if (supportingFile != null) {
+                    FileUtils fileUtils = new FileUtils();
+                    fileUtils.setFileName((String) supportingFile.get("fileName"));
+                    fileUtils.setFilePath((String) supportingFile.get("filePath"));
+                    fileUtils.setFileType(getFileExtension((String) supportingFile.get("fileName")));
+                    fileUtils.setFileSize(supportingFile.get("fileSize") != null ? 
+                        ((Number) supportingFile.get("fileSize")).longValue() : null);
+                    
+                    sysFileService.save(fileUtils);
+                }
+            }
+
+            // 发送投稿确认邮件
+            try {
+                sendSubmissionEmail(article);
+            } catch (Exception e) {
+                logger.error("发送投稿确认邮件失败，文章ID: {}", article.getArticleId(), e);
+            }
+
+            return AjaxResult.success("Article updated successfully", article);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return AjaxResult.error("Failed to update article: " + e.getMessage());
+        }
+    }
+
+    /**
      * 提交文章
      */
     @Log(title = "文章提交", businessType = BusinessType.INSERT)
     @PostMapping("/submit")
-    @Operation(summary = "提交文章", description = "提交新文章，包括文章基本信息、文件上传、建议审稿人和避免审稿人信息。文件为multipart/form-data格式")
+    @Operation(summary = "提交文章", description = "提交新文章，包括文章基本信息、文件路径、建议审稿人和避免审稿人信息。文件已通过统一上传接口上传")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "提交成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数无效或文件上传失败"),
+            @ApiResponse(responseCode = "400", description = "请求参数无效"),
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     public AjaxResult submitArticle(
-            @Parameter(description = "文章参数（title:标题, abstract:摘要, keywords:关键词, coverLetter:投稿信, suggestedReviewers:建议审稿人JSON, opposedReviewers:避免审稿人JSON）")
-            @RequestParam Map<String, String> params,
-            @Parameter(description = "文章文件（PDF或Word文档）", required = true)
-            @RequestParam("file") MultipartFile file) {
+            @Parameter(description = "文章信息（JSON格式）", required = true)
+            @RequestBody Map<String, Object> params) {
         try {
             // 1. 创建文章基本信息
             Article article = new Article();
-            article.setArticleTitle(params.get("title"));
-            article.setArticleAbstract(params.get("abstract"));
-            article.setArticleKeywords(params.get("keywords"));
-            // 使用枚举类设置ID
-            article.setArticleManuscriptTypeId(ArticleManuscriptTypeEnum.ORIGINAL_RESEARCH.getTypeId());
+            article.setArticleTitle((String) params.get("title"));
+            article.setArticleAbstract((String) params.get("abstract"));
+            article.setArticleKeywords((String) params.get("keywords"));
+            article.setArticleCoverLetter((String) params.get("coverLetter"));
+            
+            // 解析稿件类型（前端传的是枚举名称，需要转换为ID）
+            String manuscriptType = (String) params.get("manuscriptType");
+            if (manuscriptType != null) {
+                try {
+                    ArticleManuscriptTypeEnum typeEnum = ArticleManuscriptTypeEnum.valueOf(manuscriptType);
+                    article.setArticleManuscriptTypeId(typeEnum.getTypeId());
+                } catch (IllegalArgumentException e) {
+                    article.setArticleManuscriptTypeId(ArticleManuscriptTypeEnum.ORIGINAL_RESEARCH.getTypeId());
+                }
+            } else {
+                article.setArticleManuscriptTypeId(ArticleManuscriptTypeEnum.ORIGINAL_RESEARCH.getTypeId());
+            }
+            
+            // 使用枚举类设置状态和提交类型
             article.setArticleStatusId(ArticleStatusEnum.SUBMITTED.getStatusId());
             article.setArticleSubmissionTypeId(ArticleSubmissionTypeEnum.INITIAL_SUBMISSION.getTypeId());
-            article.setArticleCoverLetter(params.get("coverLetter"));
+            
+            // 设置字数、图表数量等
+            if (params.get("wordCount") != null) {
+                article.setArticleWordCount(((Number) params.get("wordCount")).intValue());
+            }
+            if (params.get("figureCount") != null) {
+                article.setArticleFigureCount(((Number) params.get("figureCount")).intValue());
+            }
+            if (params.get("tableCount") != null) {
+                article.setArticleTableCount(((Number) params.get("tableCount")).intValue());
+            }
+            
+            // 设置学科领域（支持数组格式，转换为逗号分隔字符串）
+            if (params.get("subjectArea") instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<String> subjectAreas = (List<String>) params.get("subjectArea");
+                article.setArticleSubjectAreas(String.join(",", subjectAreas));
+            } else if (params.get("subjectArea") != null) {
+                article.setArticleSubjectAreas(params.get("subjectArea").toString());
+            }
+
+            // 设置提交时间
+            article.setArticleSubmitTime(LocalDateTime.now());
 
             // 2. 保存文章
             int result = articleService.insertArticle(article);
@@ -210,10 +413,54 @@ public class ArticleController extends BaseController {
                 return AjaxResult.error("Failed to save article");
             }
 
-            // 3. 保存文件信息
-            if (file != null && !file.isEmpty()) {
-                // TODO: 实现文件保存逻辑
-                // saveFile(article.getArticleId(), file);
+            // 3. 保存文件信息（文件已经通过统一上传接口上传）
+            String filePath = (String) params.get("filePath");
+            String fileName = (String) params.get("fileName");
+            Long fileSize = params.get("fileSize") != null ? ((Number) params.get("fileSize")).longValue() : null;
+            
+            if (filePath != null && fileName != null) {
+                FileUtils fileUtils = new FileUtils();
+                fileUtils.setFileName(fileName);
+                fileUtils.setFilePath(filePath);
+                fileUtils.setFileType(getFileExtension(fileName));
+                fileUtils.setFileSize(fileSize);
+                
+                sysFileService.save(fileUtils);
+            }
+
+            // 4. 保存建议审稿人（如果提供）
+            if (params.get("suggestedReviewers") instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> suggestedReviewers = (List<Map<String, Object>>) params.get("suggestedReviewers");
+                for (Map<String, Object> reviewerData : suggestedReviewers) {
+                    ArticleSuggestedReviewer reviewer = new ArticleSuggestedReviewer();
+                    reviewer.setArticleId(article.getArticleId());
+                    reviewer.setReviewerUserId(((Number) reviewerData.get("suggestedUserId")).longValue());
+                    reviewer.setReason((String) reviewerData.get("suggestedReason"));
+                    reviewer.setStatus(0); // 待处理
+                    suggestedReviewerService.insertSuggestedReviewer(reviewer);
+                }
+            }
+
+            // 5. 保存避免审稿人（如果提供）
+            if (params.get("opposedReviewers") instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> opposedReviewers = (List<Map<String, Object>>) params.get("opposedReviewers");
+                for (Map<String, Object> reviewerData : opposedReviewers) {
+                    ArticleOpposedReviewer reviewer = new ArticleOpposedReviewer();
+                    reviewer.setArticleId(article.getArticleId());
+                    reviewer.setReviewerUserId(((Number) reviewerData.get("opposedUserId")).longValue());
+                    reviewer.setReason((String) reviewerData.get("opposedReason"));
+                    opposedReviewerService.insertOpposedReviewer(reviewer);
+                }
+            }
+
+            // 6. 发送投稿确认邮件（异步发送，不影响主流程）
+            try {
+                sendSubmissionEmail(article);
+            } catch (Exception e) {
+                // 邮件发送失败不影响提交结果，只记录日志
+                logger.error("发送投稿确认邮件失败，文章ID: {}", article.getArticleId(), e);
             }
 
             return AjaxResult.success("Article submitted successfully", article);
@@ -300,6 +547,55 @@ public class ArticleController extends BaseController {
         reviewer.setArticleId(articleId);
         int result = opposedReviewerService.insertOpposedReviewer(reviewer);
         return toAjax(result);
+    }
+
+    /**
+     * 发送投稿确认邮件
+     */
+    private void sendSubmissionEmail(Article article) {
+        // 获取第一作者信息
+        ArticleAuthor firstAuthor = null;
+        List<ArticleAuthor> authors = articleAuthorService.getAuthorsByArticleId(article.getArticleId());
+        if (authors != null && !authors.isEmpty()) {
+            firstAuthor = authors.stream()
+                    .min((a1, a2) -> Integer.compare(
+                            a1.getAuthorOrder() != null ? a1.getAuthorOrder() : 999,
+                            a2.getAuthorOrder() != null ? a2.getAuthorOrder() : 999))
+                    .orElse(authors.get(0));
+        }
+
+        // 构建邮件内容
+        String articleTitle = article.getArticleTitle() != null ? article.getArticleTitle() : "未知标题";
+        String manuscriptId = article.getArticleManuscriptId() != null 
+                ? article.getArticleManuscriptId() 
+                : "MS-" + article.getArticleId();
+        String submitterName = firstAuthor != null && firstAuthor.getAuthorUser() != null
+                ? firstAuthor.getAuthorUser().getUserRealName()
+                : "投稿人";
+        String submitterEmail = firstAuthor != null && firstAuthor.getAuthorUser() != null
+                ? firstAuthor.getAuthorUser().getUserEmail()
+                : "";
+        String submitTime = article.getArticleSubmitTime() != null
+                ? article.getArticleSubmitTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        // 发送邮件
+        emailService.sendArticleSubmissionEmail(
+                articleTitle, manuscriptId, submitterName, submitterEmail, submitTime);
+    }
+
+    /**
+     * 获取文件扩展名
+     */
+    private String getFileExtension(String filename) {
+        if (filename == null || filename.isEmpty()) {
+            return "";
+        }
+        int lastDotIndex = filename.lastIndexOf('.');
+        if (lastDotIndex == -1 || lastDotIndex == filename.length() - 1) {
+            return "";
+        }
+        return filename.substring(lastDotIndex + 1);
     }
 
 }

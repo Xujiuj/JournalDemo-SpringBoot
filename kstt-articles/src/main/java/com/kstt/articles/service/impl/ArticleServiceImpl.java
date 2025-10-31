@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -168,7 +169,45 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     
     @Override
     public int insertArticle(Article article) {
+        // Generate manuscript ID if not provided
+        if (article.getArticleManuscriptId() == null || article.getArticleManuscriptId().isEmpty()) {
+            String manuscriptId = generateManuscriptId();
+            article.setArticleManuscriptId(manuscriptId);
+        }
         return articleMapper.insertArticle(article);
+    }
+    
+    /**
+     * Generate manuscript ID in format: JST-YYYY-NNNN
+     * e.g., JST-2025-0001, JST-2025-0002, etc.
+     */
+    private String generateManuscriptId() {
+        int currentYear = LocalDate.now().getYear();
+        
+        // Find the max sequence number for the current year
+        String pattern = "JST-" + currentYear + "-%";
+        List<Article> articles = articleMapper.selectByManuscriptIdPattern(pattern);
+        
+        int maxSeq = 0;
+        for (Article article : articles) {
+            String manuscriptId = article.getArticleManuscriptId();
+            if (manuscriptId != null && manuscriptId.startsWith("JST-" + currentYear + "-")) {
+                try {
+                    // Extract sequence number: "JST-2025-" has length 9
+                    String seqStr = manuscriptId.substring(9);
+                    int seq = Integer.parseInt(seqStr);
+                    maxSeq = Math.max(maxSeq, seq);
+                } catch (NumberFormatException e) {
+                    // Skip invalid format
+                }
+            }
+        }
+        
+        // Generate next sequence number (4 digits)
+        int nextSeq = maxSeq + 1;
+        String seqStr = String.format("%04d", nextSeq);
+        
+        return "JST-" + currentYear + "-" + seqStr;
     }
     
     @Override

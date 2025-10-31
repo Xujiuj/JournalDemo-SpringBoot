@@ -13,7 +13,8 @@ import org.springframework.context.annotation.Configuration;
     "com.kstt.articles.mapper",
     "com.kstt.notices.mapper",
     "com.kstt.contact.mapper",
-    "com.kstt.about.mapper"
+    "com.kstt.about.mapper",
+    "com.kstt.common.mapper"
 })
 public class MyBatisConfig {
 }

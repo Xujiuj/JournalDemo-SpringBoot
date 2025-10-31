@@ -221,4 +221,10 @@
         order by a.article_publish_time desc
         limit #{limits}
     </select>
+
+    <select id="selectByManuscriptIdPattern" resultMap="ArticleResult">
+        <include refid="selectArticleVo"/>
+        where article_manuscript_id like #{pattern}
+        order by article_submit_time desc
+    </select>
 </mapper>

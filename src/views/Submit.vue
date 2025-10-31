@@ -3,52 +3,54 @@
     <div class="submit min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 relative overflow-hidden">
       <div class="container relative z-10">
         <!-- Page Header -->
-        <div class="relative z-10 py-20">
+        <div class="relative z-10 py-12">
           <div class="container mx-auto px-4">
             <div class="text-center">
-              <h1 class="text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight font-serif mb-6 animate-fade-in drop-shadow-2xl">Submit Paper</h1>
-              <p class="text-lg lg:text-xl text-slate-100 leading-relaxed mb-8 animate-slide-up drop-shadow-lg">Submit your research paper for publication consideration</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Login Required Notice -->
-        <div v-if="!isAuthenticated" class="relative z-10 py-20">
-          <div class="container mx-auto px-4">
-            <div class="max-w-2xl mx-auto">
-              <div class="smooth-card smooth-card-red animate-slide-up text-center">
-                <h2 class="text-2xl font-bold text-white mb-4">Login Required</h2>
-                <p class="text-slate-200 mb-6">You need to be logged in to submit a paper. Please log in or create an account to continue.</p>
-                <div class="flex justify-center gap-4">
-                  <button @click="showLogin = true" class="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white rounded-lg font-semibold hover:from-cyan-600 hover:via-blue-600 hover:to-indigo-600 hover:shadow-2xl transition-all duration-700 ease-out overflow-hidden">
-                    Login
-                    <svg class="w-4 h-4 ml-2 transition-transform duration-500 ease-out group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                    </svg>
-                  </button>
-                  <button @click="showRegister = true" class="group relative inline-flex items-center gap-2 px-6 py-3 bg-white/10 dark:bg-slate-700/20 text-cyan-400 border border-cyan-400 rounded-lg font-semibold hover:bg-white/20 dark:hover:bg-slate-700/30 hover:shadow-lg transition-all duration-500 ease-out overflow-hidden">
-                    Register
-                    <svg class="w-4 h-4 ml-2 transition-transform duration-500 ease-out group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
+              <h1 class="text-4xl lg:text-5xl font-bold text-white leading-tight font-serif mb-4">Submit Paper</h1>
+              <p class="text-lg text-slate-100">Submit your research paper for publication consideration</p>
             </div>
           </div>
         </div>
 
         <!-- Submission Form -->
-        <div v-else class="relative z-10 py-20">
+        <div class="relative z-10 pb-20">
           <div class="container mx-auto px-4">
             <div class="max-w-4xl mx-auto">
+              <!-- Progress Steps -->
+              <div class="mb-8">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <div :class="['w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all', 
+                                 currentStep >= 1 ? 'bg-cyan-500 text-white' : 'bg-slate-600 text-slate-300']">
+                      <span v-if="currentStep > 1">✓</span>
+                      <span v-else>1</span>
+                    </div>
+                    <span :class="['ml-3 font-medium', currentStep >= 1 ? 'text-cyan-400' : 'text-slate-400']">
+                      Basic Information
+                    </span>
+                  </div>
+                  <div class="flex-1 h-0.5 mx-4" :class="currentStep >= 2 ? 'bg-cyan-500' : 'bg-slate-600'"></div>
+                  <div class="flex items-center">
+                    <div :class="['w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all', 
+                                 currentStep >= 2 ? 'bg-cyan-500 text-white' : 'bg-slate-600 text-slate-300']">
+                      <span v-if="currentStep > 2">✓</span>
+                      <span v-else>2</span>
+                    </div>
+                    <span :class="['ml-3 font-medium', currentStep >= 2 ? 'text-cyan-400' : 'text-slate-400']">
+                      File Upload
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div class="smooth-card smooth-card-blue animate-slide-up">
-                <form @submit.prevent="submitPaper" class="space-y-8">
+                <!-- Step 1: Basic Information -->
+                <div v-if="currentStep === 1" class="space-y-8">
                   <div class="form-section">
-                    <h2>Paper Information</h2>
+                    <h2 class="text-2xl font-bold text-white mb-6">Paper Information</h2>
 
                     <div class="form-group">
-                      <label for="title">Paper Title *</label>
+                      <label for="title" class="auth-label block text-white font-semibold mb-3">Paper Title <span class="text-red-400">*</span></label>
                       <input
                         id="title"
                         v-model="form.title"
@@ -56,57 +58,47 @@
                         required
                         placeholder="Enter the title of your paper"
                         maxlength="500"
-                        :class="[fieldErrors.title && 'input-warning']"
-                        data-field="title"
+                        class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                        :class="[fieldErrors.title && 'border-red-500']"
                       />
                       <div class="char-count">{{ form.title.length }}/500</div>
-                      <p v-if="fieldErrors.title" class="form-help field-hint-warning">{{ fieldErrors.title }}</p>
+                      <p v-if="fieldErrors.title" class="text-sm text-red-400 mt-1">{{ fieldErrors.title }}</p>
                     </div>
 
                     <div class="form-group">
-                      <label for="coverLetter">Cover Letter</label>
-                      <textarea
-                        id="coverLetter"
-                        v-model="form.coverLetter"
-                        rows="4"
-                        placeholder="Provide a brief cover letter to the editors (optional)"
-                      ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                      <label for="abstract">Abstract *</label>
+                      <label for="abstract" class="space-y-2 text-sm font-semibold text-slate-200">Abstract <span class="text-red-400">*</span></label>
                       <textarea
                         id="abstract"
                         v-model="form.abstract"
                         required
-                        rows="5"
+                        rows="6"
                         placeholder="Provide a comprehensive abstract of your paper (250-300 words)"
                         maxlength="2000"
-                        :class="[fieldErrors.abstract && 'input-warning']"
-                        data-field="abstract"
+                        class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 resize-none"
+                        :class="[fieldErrors.abstract && 'border-red-500']"
                       ></textarea>
                       <div class="char-count">{{ form.abstract.length }}/2000</div>
-                      <p v-if="fieldErrors.abstract" class="form-help field-hint-warning">{{ fieldErrors.abstract }}</p>
+                      <p v-if="fieldErrors.abstract" class="text-sm text-red-400 mt-1">{{ fieldErrors.abstract }}</p>
                     </div>
 
                     <div class="form-group">
-                      <label for="keywords">Keywords *</label>
+                      <label for="keywords" class="space-y-2 text-sm font-semibold text-slate-200">Keywords <span class="text-red-400">*</span></label>
                       <input
                         id="keywords"
                         v-model="form.keywords"
                         type="text"
                         required
-                        placeholder="Enter keywords separated by commas (e.g., machine learning, artificial intelligence, data science)"
-                        :class="[fieldErrors.keywords && 'input-warning']"
-                        data-field="keywords"
+                        placeholder="Enter keywords separated by commas"
+                        class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                        :class="[fieldErrors.keywords && 'border-red-500']"
                       />
-                      <p v-if="fieldErrors.keywords" class="form-help field-hint-warning">{{ fieldErrors.keywords }}</p>
+                      <p v-if="fieldErrors.keywords" class="text-sm text-red-400 mt-1">{{ fieldErrors.keywords }}</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div class="form-group">
-                        <label for="manuscriptType">Manuscript Type *</label>
-                        <select id="manuscriptType" v-model="form.manuscriptType" required :class="[fieldErrors.manuscriptType && 'input-warning']" data-field="manuscriptType">
+                        <label for="manuscriptType" class="space-y-2 text-sm font-semibold text-slate-200">Manuscript Type <span class="text-red-400">*</span></label>
+                        <select id="manuscriptType" v-model="form.manuscriptType" required class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40" :class="[fieldErrors.manuscriptType && 'border-red-500']">
                           <option value="">Please select</option>
                           <option value="RESEARCH_ARTICLE">Research Article</option>
                           <option value="REVIEW">Review</option>
@@ -114,192 +106,288 @@
                           <option value="CASE_STUDY">Case Study</option>
                           <option value="LETTER">Letter</option>
                         </select>
-                        <p v-if="fieldErrors.manuscriptType" class="form-help field-hint-warning">{{ fieldErrors.manuscriptType }}</p>
+                        <p v-if="fieldErrors.manuscriptType" class="text-sm text-red-400 mt-1">{{ fieldErrors.manuscriptType }}</p>
                       </div>
 
                       <div class="form-group">
-                        <label for="subjectArea">Subject Area *</label>
-                        <input id="subjectArea" v-model="form.subjectArea" type="text" required placeholder="e.g., Computer Science; AI" :class="[fieldErrors.subjectArea && 'input-warning']" data-field="subjectArea" />
-                        <p v-if="fieldErrors.subjectArea" class="form-help field-hint-warning">{{ fieldErrors.subjectArea }}</p>
+                        <label for="subjectArea" class="space-y-2 text-sm font-semibold text-slate-200">Subject Area <span class="text-red-400">*</span></label>
+                        <div class="relative area-dropdown-container">
+                          <div 
+                            @click="showAreaDropdown = !showAreaDropdown"
+                            class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white cursor-pointer hover:border-cyan-500 transition-colors min-h-[48px] flex items-center justify-between"
+                            :class="[fieldErrors.subjectArea && 'border-red-500']"
+                          >
+                            <div class="flex flex-wrap gap-2">
+                              <span v-if="!form.subjectArea" class="text-slate-400">
+                                Select subject area
+                              </span>
+                              <span v-else class="text-white">
+                                {{ form.subjectArea }}
+                              </span>
+                            </div>
+                            <svg class="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                          </div>
+                          
+                          <!-- Dropdown -->
+                          <div 
+                            v-if="showAreaDropdown"
+                            class="absolute z-10 w-full mt-2 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-96 overflow-y-auto"
+                          >
+                            <div v-for="subject in subjects" :key="subject.subjectId" class="border-b border-slate-700 last:border-0">
+                              <!-- Subject Header (Clickable) -->
+                              <div 
+                                @click="toggleSubject(subject.subjectId)"
+                                class="px-4 py-3 bg-slate-700/50 font-semibold text-amber-300 text-sm cursor-pointer hover:bg-slate-700 transition-colors flex items-center justify-between"
+                              >
+                                <span>{{ subject.subjectName }}</span>
+                                <svg 
+                                  class="w-4 h-4 transition-transform duration-200"
+                                  :class="{ 'rotate-90': isSubjectExpanded(subject.subjectId) }"
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                              </div>
+                              <!-- Areas (Collapsible) -->
+                              <div 
+                                v-if="isSubjectExpanded(subject.subjectId)"
+                                class="p-2"
+                              >
+                                <div 
+                                  v-for="area in getAreasBySubject(subject.subjectId)" 
+                                  :key="area.areaId"
+                                  @click="selectArea(area)"
+                                  class="px-3 py-2 hover:bg-slate-700/50 rounded cursor-pointer transition-colors"
+                                >
+                                  <span class="text-sm text-slate-300">{{ area.areaName }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <p v-if="fieldErrors.subjectArea" class="text-sm text-red-400 mt-1">{{ fieldErrors.subjectArea }}</p>
                       </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div class="form-group">
-                        <label for="wordCount">Word Count *</label>
-                        <input id="wordCount" v-model.number="form.wordCount" type="number" min="0" required placeholder="e.g., 5200" :class="[fieldErrors.wordCount && 'input-warning']" data-field="wordCount" />
-                        <p v-if="fieldErrors.wordCount" class="form-help field-hint-warning">{{ fieldErrors.wordCount }}</p>
+                        <label for="wordCount" class="space-y-2 text-sm font-semibold text-slate-200">Word Count <span class="text-red-400">*</span></label>
+                        <input 
+                          id="wordCount" 
+                          v-model.number="form.wordCount" 
+                          type="number" 
+                          min="0" 
+                          required 
+                          placeholder="e.g., 5200"
+                          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                          :class="[fieldErrors.wordCount && 'border-red-500']"
+                        />
+                        <p v-if="fieldErrors.wordCount" class="text-sm text-red-400 mt-1">{{ fieldErrors.wordCount }}</p>
                       </div>
                       <div class="form-group">
-                        <label for="figureCount">Figures *</label>
-                        <input id="figureCount" v-model.number="form.figureCount" type="number" min="0" required placeholder="e.g., 5" :class="[fieldErrors.figureCount && 'input-warning']" data-field="figureCount" />
-                        <p v-if="fieldErrors.figureCount" class="form-help field-hint-warning">{{ fieldErrors.figureCount }}</p>
+                        <label for="figureCount" class="space-y-2 text-sm font-semibold text-slate-200">Figures</label>
+                        <input 
+                          id="figureCount" 
+                          v-model.number="form.figureCount" 
+                          type="number" 
+                          min="0" 
+                          placeholder="e.g., 5"
+                          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                        />
                       </div>
                       <div class="form-group">
-                        <label for="tableCount">Tables *</label>
-                        <input id="tableCount" v-model.number="form.tableCount" type="number" min="0" required placeholder="e.g., 3" :class="[fieldErrors.tableCount && 'input-warning']" data-field="tableCount" />
-                        <p v-if="fieldErrors.tableCount" class="form-help field-hint-warning">{{ fieldErrors.tableCount }}</p>
+                        <label for="tableCount" class="space-y-2 text-sm font-semibold text-slate-200">Tables</label>
+                        <input 
+                          id="tableCount" 
+                          v-model.number="form.tableCount" 
+                          type="number" 
+                          min="0" 
+                          placeholder="e.g., 3"
+                          class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                        />
                       </div>
                     </div>
 
                     <div class="form-group">
-                      <label for="suggestedReviewers">Suggested Reviewers (JSON)</label>
+                      <label for="coverLetter" class="space-y-2 text-sm font-semibold text-slate-200">Cover Letter</label>
                       <textarea
-                        id="suggestedReviewers"
-                        v-model="form.suggestedReviewers"
+                        id="coverLetter"
+                        v-model="form.coverLetter"
                         rows="4"
-                        placeholder='e.g. [{"suggestedUserId":123,"suggestedReason":"Expert in topic"}]'
-                      ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                      <label for="opposedReviewers">Opposed Reviewers (JSON)</label>
-                      <textarea
-                        id="opposedReviewers"
-                        v-model="form.opposedReviewers"
-                        rows="4"
-                        placeholder='e.g. [{"opposedUserId":456,"opposedReason":"Conflict of interest"}]'
+                        placeholder="Provide a brief cover letter to the editors (optional)"
+                        class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 resize-none"
                       ></textarea>
                     </div>
                   </div>
 
+                  <!-- Academic Commitments -->
                   <div class="form-section">
-                    <h2>File Upload</h2>
+                    <h2 class="text-2xl font-bold text-white mb-6">Academic Commitments</h2>
 
-                    <div class="form-group">
-                      <label for="file">Paper File *</label>
-                      <input
-                        id="file"
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        @change="handleFileUpload"
-                        required
-                        :class="[fieldErrors.file && 'input-warning']"
-                        data-field="file"
-                      />
-                      <p class="file-help">Accepted formats: PDF, DOC, DOCX (Max size: 10MB)</p>
-                      <p v-if="fieldErrors.file" class="form-help field-hint-warning">{{ fieldErrors.file }}</p>
-                    </div>
-                  </div>
-
-
-                  <div class="form-section">
-                    <h2>Additional Information</h2>
-
-                    <div class="form-group">
-                      <label for="notes">Notes to Editors</label>
-                      <textarea id="notes" v-model="form.notes" rows="3" placeholder="Any additional notes (optional)"></textarea>
-                    </div>
-
-                    <div class="space-y-3">
+                    <div class="space-y-4">
                       <label class="checkbox-label">
-                        <input type="checkbox" v-model="form.declareOriginal" required :class="[fieldErrors.declareOriginal && 'input-warning']" data-field="declareOriginal" />
+                        <input 
+                          type="checkbox" 
+                          v-model="form.declareOriginal" 
+                          required 
+                          :class="[fieldErrors.declareOriginal && 'input-warning']"
+                        />
                         <span class="checkmark"></span>
-                        I declare this submission is original and not under consideration elsewhere.
+                        I declare this submission is original and not under consideration elsewhere. *
                       </label>
                       <label class="checkbox-label">
-                        <input type="checkbox" v-model="form.declareCorresponding" required :class="[fieldErrors.declareCorresponding && 'input-warning']" data-field="declareCorresponding" />
+                        <input 
+                          type="checkbox" 
+                          v-model="form.declareCorresponding" 
+                          required 
+                          :class="[fieldErrors.declareCorresponding && 'input-warning']"
+                        />
                         <span class="checkmark"></span>
-                        I am the corresponding author and responsible for communication with the journal.
+                        I am the corresponding author and responsible for communication with the journal. *
                       </label>
                       <label class="checkbox-label">
-                        <input type="checkbox" v-model="form.declareNoConflict" required :class="[fieldErrors.declareNoConflict && 'input-warning']" data-field="declareNoConflict" />
+                        <input 
+                          type="checkbox" 
+                          v-model="form.declareNoConflict" 
+                          required 
+                          :class="[fieldErrors.declareNoConflict && 'input-warning']"
+                        />
                         <span class="checkmark"></span>
-                        All authors declare no competing interests related to this work.
-                      </label>
-                      <label class="checkbox-label">
-                        <input type="checkbox" v-model="form.agreeTerms" required :class="[fieldErrors.agreeTerms && 'input-warning']" data-field="agreeTerms" />
-                        <span class="checkmark"></span>
-                        I agree to the <a href="#" target="_blank">Terms and Conditions</a> and <a href="#" target="_blank">Publication Ethics</a>
+                        All authors declare no competing interests related to this work. *
                       </label>
                       <p v-if="fieldErrors.general" class="form-help field-hint-warning">{{ fieldErrors.general }}</p>
                     </div>
                   </div>
 
                   <div class="form-actions">
-                    <button type="button" @click="resetForm" class="btn btn-outline">
-                      Reset Form
+                    <button 
+                      type="button" 
+                      @click="handleNextStep" 
+                      class="btn btn-primary"
+                      :disabled="validatingStep1"
+                    >
+                      <span v-if="validatingStep1">Validating...</span>
+                      <span v-else>Next: Upload Files</span>
                     </button>
-                    <button type="submit" class="btn btn-primary" :disabled="submitting">
+                  </div>
+                </div>
+
+                <!-- Step 2: File Upload -->
+                <div v-if="currentStep === 2" class="space-y-8">
+                  <div class="form-section">
+                    <h2 class="text-2xl font-bold text-white mb-6">Upload Files</h2>
+
+                    <div class="form-group">
+                      <label for="paperFile" class="space-y-2 text-sm font-semibold text-slate-200">Manuscript File <span class="text-red-400">*</span></label>
+                      <input
+                        id="paperFile"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        @change="handlePaperFileUpload"
+                        required
+                        class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                        :class="[fieldErrors.paperFile && 'border-red-500']"
+                      />
+                      <p class="file-help">Accepted formats: PDF, DOC, DOCX (Max size: 20MB)</p>
+                      <p v-if="fieldErrors.paperFile" class="text-sm text-red-400 mt-1">{{ fieldErrors.paperFile }}</p>
+                      <div v-if="uploadProgress.paperFile > 0" class="mt-2">
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                          <div class="bg-cyan-500 h-2 rounded-full transition-all" :style="{ width: uploadProgress.paperFile + '%' }"></div>
+                        </div>
+                        <p class="text-sm text-slate-300 mt-1">{{ uploadProgress.paperFile }}% uploaded</p>
+                      </div>
+                      <div v-if="uploadedFiles.paperFile" class="mt-2 text-sm text-green-400 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        {{ uploadedFiles.paperFile.originalName }} uploaded successfully
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="supportingFile" class="space-y-2 text-sm font-semibold text-slate-200">Supporting Materials (Optional)</label>
+                      <input
+                        id="supportingFile"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.zip"
+                        @change="handleSupportingFileUpload"
+                        class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-2.5 text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                        :class="[fieldErrors.supportingFile && 'border-red-500']"
+                      />
+                      <p class="file-help">Accepted formats: PDF, DOC, DOCX, ZIP (Max size: 20MB)</p>
+                      <p v-if="fieldErrors.supportingFile" class="text-sm text-red-400 mt-1">{{ fieldErrors.supportingFile }}</p>
+                      <div v-if="uploadProgress.supportingFile > 0" class="mt-2">
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                          <div class="bg-cyan-500 h-2 rounded-full transition-all" :style="{ width: uploadProgress.supportingFile + '%' }"></div>
+                        </div>
+                        <p class="text-sm text-slate-300 mt-1">{{ uploadProgress.supportingFile }}% uploaded</p>
+                      </div>
+                      <div v-if="uploadedFiles.supportingFile" class="mt-2 text-sm text-green-400 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        {{ uploadedFiles.supportingFile.originalName }} uploaded successfully
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-actions">
+                    <button 
+                      type="button" 
+                      @click="currentStep = 1" 
+                      class="btn btn-outline"
+                    >
+                      Back to Information
+                    </button>
+                    <button 
+                      type="button" 
+                      @click="handleSubmit" 
+                      class="btn btn-primary"
+                      :disabled="submitting"
+                    >
                       <span v-if="submitting">Submitting...</span>
                       <span v-else>Submit Paper</span>
                     </button>
                   </div>
-                </form>
+                </div>
+
+                <!-- Success Message -->
+                <div v-if="currentStep === 3" class="text-center py-12">
+                  <svg class="w-20 h-20 mx-auto text-green-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <h2 class="text-3xl font-bold text-white mb-4">Submission Successful!</h2>
+                  <p class="text-lg text-slate-300 mb-8">
+                    Your paper has been submitted successfully. You will receive a confirmation email shortly.
+                  </p>
+                  <button @click="resetForm" class="btn btn-primary">
+                    Submit Another Paper
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Login Modal -->
-        <div v-if="showLogin" class="modal-overlay" @click="showLogin = false">
-          <div class="modal" @click.stop>
-            <div class="modal-header">
-              <h3>Login</h3>
-              <button class="close-btn" @click="showLogin = false">&times;</button>
-            </div>
-            <div class="modal-content">
-              <form @submit.prevent="handleLogin">
-                <div class="form-group">
-                  <label>Email</label>
-                  <input v-model="loginForm.email" type="email" required />
-                </div>
-                <div class="form-group">
-                  <label>Password</label>
-                  <input v-model="loginForm.password" type="password" required />
-                </div>
-                <button type="submit" class="btn btn-primary">Login</button>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <!-- Register Modal -->
-        <div v-if="showRegister" class="modal-overlay" @click="showRegister = false">
-          <div class="modal" @click.stop>
-            <div class="modal-header">
-              <h3>Register</h3>
-              <button class="close-btn" @click="showRegister = false">&times;</button>
-            </div>
-            <div class="modal-content">
-              <form @submit.prevent="handleRegister">
-                <div class="form-group">
-                  <label>Full Name</label>
-                  <input v-model="registerForm.name" type="text" required />
-                </div>
-                <div class="form-group">
-                  <label>Email</label>
-                  <input v-model="registerForm.email" type="email" required />
-                </div>
-                <div class="form-group">
-                  <label>Password</label>
-                  <input v-model="registerForm.password" type="password" required />
-                </div>
-                <button type="submit" class="btn btn-primary">Register</button>
-              </form>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   </PageScaffold>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
-import { authApi, apiClient } from '@/api'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { authApi, apiClient, uploadApi, subjectApi } from '@/api'
 import PageScaffold from '@/components/layout/PageScaffold.vue'
 
-const isAuthenticated = computed(() => {
-  const token = localStorage.getItem('token')
-  const user = localStorage.getItem('user')
-  return !!(token && user)
-})
+const router = useRouter()
 
-const showLogin = ref(false)
-const showRegister = ref(false)
+const currentStep = ref(1)
 const submitting = ref(false)
+const validatingStep1 = ref(false)
 
 const form = reactive({
   title: '',
@@ -311,438 +399,315 @@ const form = reactive({
   figureCount: 0,
   tableCount: 0,
   coverLetter: '',
-  suggestedReviewers: '',
-  opposedReviewers: '',
-  file: null,
-  notes: '',
   declareOriginal: false,
   declareCorresponding: false,
-  declareNoConflict: false,
-  agreeTerms: false
+  declareNoConflict: false
 })
 
 const fieldErrors = reactive({})
 
-const loginForm = reactive({
-  email: '',
-  password: ''
-})
+// Subject area dropdown state
+const subjects = ref([])
+const areas = ref([])
+const showAreaDropdown = ref(false)
+const expandedSubjects = ref(new Set())
 
-const registerForm = reactive({
-  username: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-  realName: '',
-  affiliation: '',
-  department: '',
-  title: '',
-  position: '',
-  phone: '',
-  fax: '',
-  address: '',
-  country: '',
-  city: '',
-  postalCode: '',
-  researchAreas: '',
-  orcid: '',
-  researcherId: '',
-  googleScholar: '',
-  publons: '',
-  scopus: '',
-  academicDegrees: '',
-  professionalMemberships: '',
-  fundingSources: '',
-  conflictInterests: '',
-  biography: '',
-  agreeTerms: false
-})
+const extractList = (response) => {
+  const res = response?.data ?? {}
+  const payload = res.data ?? res
 
-const handleFileUpload = (event) => {
-  form.file = event.target.files[0]
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data
+  }
+
+  if (Array.isArray(payload?.rows)) {
+    return payload.rows
+  }
+
+  return []
 }
 
-
-
-
-const scrollToFirstError = () => {
-  const firstKey = Object.keys(fieldErrors)[0]
-  if (!firstKey) return
-  const el = document.querySelector(`[data-field="${firstKey}"]`)
-  if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+const getAreasBySubject = (subjectId) => {
+  if (!Array.isArray(areas.value)) {
+    return []
+  }
+  return areas.value.filter(area => area.areaSubjectId === subjectId)
 }
 
-const validate = () => {
+const toggleSubject = (subjectId) => {
+  if (expandedSubjects.value.has(subjectId)) {
+    expandedSubjects.value.delete(subjectId)
+  } else {
+    expandedSubjects.value.add(subjectId)
+  }
+}
+
+const isSubjectExpanded = (subjectId) => {
+  return expandedSubjects.value.has(subjectId)
+}
+
+const selectArea = (area) => {
+  form.subjectArea = area.areaName
+  showAreaDropdown.value = false
+}
+
+const paperFile = ref(null)
+const supportingFile = ref(null)
+const uploadedFiles = reactive({
+  paperFile: null,
+  supportingFile: null
+})
+const uploadProgress = reactive({
+  paperFile: 0,
+  supportingFile: 0
+})
+
+// Create article ID for file upload subdirectory
+let articleId = null
+
+// Close dropdown when clicking outside
+let clickHandler = null
+
+onMounted(async () => {
+  // Already authenticated by router guard
+  console.log('Submit page loaded')
+  
+  // Load subjects and areas
+  try {
+    const [subjectResponse, areaResponse] = await Promise.all([
+      subjectApi.getSubjectList(),
+      subjectApi.getAllAreas()
+    ])
+
+    subjects.value = extractList(subjectResponse)
+    areas.value = extractList(areaResponse)
+  } catch (error) {
+    console.error('Failed to load subjects and areas:', error)
+    subjects.value = []
+    areas.value = []
+  }
+  
+  // Close dropdown when clicking outside
+  clickHandler = (e) => {
+    if (!e.target.closest('.area-dropdown-container')) {
+      showAreaDropdown.value = false
+    }
+  }
+  document.addEventListener('click', clickHandler)
+})
+
+onUnmounted(() => {
+  if (clickHandler) {
+    document.removeEventListener('click', clickHandler)
+  }
+})
+
+const handlePaperFileUpload = (event) => {
+  paperFile.value = event.target.files[0]
+  uploadedFiles.paperFile = null
+  uploadProgress.paperFile = 0
+}
+
+const handleSupportingFileUpload = (event) => {
+  supportingFile.value = event.target.files[0]
+  uploadedFiles.supportingFile = null
+  uploadProgress.supportingFile = 0
+}
+
+const handleNextStep = async () => {
+  // Validate Step 1
+  validatingStep1.value = true
   Object.keys(fieldErrors).forEach(k => delete fieldErrors[k])
+
   if (!form.title) fieldErrors.title = 'Title is required'
   if (!form.abstract) fieldErrors.abstract = 'Abstract is required'
   if (!form.keywords) fieldErrors.keywords = 'Keywords are required'
-  if (!form.manuscriptType) fieldErrors.manuscriptType = 'Select a manuscript type'
+  if (!form.manuscriptType) fieldErrors.manuscriptType = 'Manuscript type is required'
   if (!form.subjectArea) fieldErrors.subjectArea = 'Subject area is required'
-  if (form.wordCount == null || form.wordCount < 0) fieldErrors.wordCount = 'Provide word count'
-  if (form.figureCount == null || form.figureCount < 0) fieldErrors.figureCount = 'Provide figure count'
-  if (form.tableCount == null || form.tableCount < 0) fieldErrors.tableCount = 'Provide table count'
-  if (!form.file) fieldErrors.file = 'Manuscript file is required'
+  if (form.wordCount == null || form.wordCount < 0) fieldErrors.wordCount = 'Word count is required'
   if (!form.declareOriginal) fieldErrors.declareOriginal = 'Required'
   if (!form.declareCorresponding) fieldErrors.declareCorresponding = 'Required'
   if (!form.declareNoConflict) fieldErrors.declareNoConflict = 'Required'
-  if (!form.agreeTerms) fieldErrors.agreeTerms = 'You must agree to terms'
-  const ok = Object.keys(fieldErrors).length === 0
-  if (!ok) scrollToFirstError()
-  return ok
+
+  validatingStep1.value = false
+
+  if (Object.keys(fieldErrors).length > 0) {
+    scrollToFirstError()
+    return
+  }
+
+  // Create article first to get articleId
+  try {
+    const articleData = {
+      title: form.title,
+      abstract: form.abstract,
+      keywords: form.keywords,
+      manuscriptType: form.manuscriptType,
+      subjectArea: form.subjectArea,
+      wordCount: form.wordCount ?? 0,
+      figureCount: form.figureCount ?? 0,
+      tableCount: form.tableCount ?? 0,
+      coverLetter: form.coverLetter || ''
+    }
+
+    const response = await apiClient.post('/articles/create', articleData)
+    
+    if (response && response.code === 200) {
+      articleId = response.data.data?.articleId
+      
+      // Upload files if selected (but don't require them yet)
+      if (articleId) {
+        if (paperFile.value) {
+          await uploadFile(paperFile.value, 'paperFile')
+        }
+        if (supportingFile.value) {
+          await uploadFile(supportingFile.value, 'supportingFile')
+        }
+      }
+      
+      currentStep.value = 2
+    } else {
+      fieldErrors.general = 'Failed to create article. Please try again.'
+    }
+  } catch (error) {
+    console.error('Error creating article:', error)
+    fieldErrors.general = 'Failed to create article. Please try again.'
+  }
 }
 
-const submitPaper = async () => {
-  if (!validate()) return
+const uploadFile = async (file, type) => {
+  if (!articleId) return
+
+  try {
+    uploadProgress[type] = 10
+    
+    const response = await uploadApi.uploadFileToSubDir(
+      file,
+      'articles',
+      String(articleId)
+    )
+
+    uploadProgress[type] = 100
+    uploadedFiles[type] = {
+      originalName: file.name,
+      fileName: response.data.fileName,
+      filePath: response.data.filePath,
+      fileSize: response.data.fileSize
+    }
+  } catch (error) {
+    console.error(`Error uploading ${type}:`, error)
+    fieldErrors[type] = `Failed to upload file. Please try again.`
+    uploadProgress[type] = 0
+  }
+}
+
+const handleSubmit = async () => {
+  // Validate Step 2
+  Object.keys(fieldErrors).forEach(k => delete fieldErrors[k])
+
+  if (!uploadedFiles.paperFile) {
+    fieldErrors.paperFile = 'Paper file is required'
+    scrollToFirstError()
+    return
+  }
 
   submitting.value = true
 
   try {
-    const formData = new FormData()
-    formData.append('title', form.title)
-    formData.append('abstract', form.abstract)
-    formData.append('keywords', form.keywords)
-    formData.append('manuscriptType', form.manuscriptType)
-    formData.append('subjectArea', form.subjectArea)
-    formData.append('wordCount', String(form.wordCount ?? ''))
-    formData.append('figureCount', String(form.figureCount ?? ''))
-    formData.append('tableCount', String(form.tableCount ?? ''))
-    if (form.coverLetter) formData.append('coverLetter', form.coverLetter)
-    if (form.suggestedReviewers) formData.append('suggestedReviewers', form.suggestedReviewers)
-    if (form.opposedReviewers) formData.append('opposedReviewers', form.opposedReviewers)
-    if (form.file) formData.append('file', form.file)
-    if (form.notes) formData.append('notes', form.notes)
-
-    const response = await apiClient.post('/articles/submit', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    // Update article with file information
+    const updateData = {
+      manuscriptId: articleId,
+      files: {
+        paper: uploadedFiles.paperFile,
+        supporting: uploadedFiles.supportingFile
       }
-    })
+    }
 
-    const isSuccess = response && (response.code !== undefined ? response.code === 200 : true)
-    if (isSuccess) {
-      resetForm()
+    const response = await apiClient.post('/articles/update', updateData)
+
+    if (response && response.code === 200) {
+      currentStep.value = 3
     } else {
-      const message = response?.msg || response?.message || 'Failed to submit paper.'
-      fieldErrors.general = message
-      scrollToFirstError()
+      fieldErrors.general = 'Failed to submit paper. Please try again.'
     }
   } catch (error) {
-    fieldErrors.general = error?.message || 'Failed to submit paper. Please try again.'
-    console.error('Submit paper error:', error)
-    scrollToFirstError()
+    console.error('Error submitting paper:', error)
+    fieldErrors.general = 'Failed to submit paper. Please try again.'
   } finally {
     submitting.value = false
   }
 }
 
 const resetForm = () => {
-  // 基本信息
   form.title = ''
   form.abstract = ''
   form.keywords = ''
+  form.manuscriptType = ''
+  form.subjectArea = ''
+  form.wordCount = null
+  form.figureCount = 0
+  form.tableCount = 0
   form.coverLetter = ''
-  // 文件
-  form.file = null
-  form.suggestedReviewers = ''
-  form.opposedReviewers = ''
-  form.notes = ''
-  form.agreeTerms = false
+  form.declareOriginal = false
+  form.declareCorresponding = false
+  form.declareNoConflict = false
+  
+  paperFile.value = null
+  supportingFile.value = null
+  uploadedFiles.paperFile = null
+  uploadedFiles.supportingFile = null
+  uploadProgress.paperFile = 0
+  uploadProgress.supportingFile = 0
+  articleId = null
+  currentStep.value = 1
+  Object.keys(fieldErrors).forEach(k => delete fieldErrors[k])
 }
 
-const handleLogin = () => {
-  console.log('Login:', loginForm)
-  showLogin.value = false
-}
-
-const handleRegister = async () => {
-  if (registerForm.password !== registerForm.confirmPassword) {
-    alert('Passwords do not match.')
-    return
+const scrollToFirstError = () => {
+  const firstKey = Object.keys(fieldErrors)[0]
+  if (!firstKey) return
+  const el = document.querySelector(`[data-field="${firstKey}"]`)
+  if (el && typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
-
-  try {
-    const response = await authApi.register({
-      username: registerForm.username,
-      email: registerForm.email,
-      password: registerForm.password,
-      realName: registerForm.realName,
-      affiliation: registerForm.affiliation,
-      department: registerForm.department,
-      title: registerForm.title,
-      position: registerForm.position,
-      phone: registerForm.phone,
-      fax: registerForm.fax,
-      address: registerForm.address,
-      country: registerForm.country,
-      city: registerForm.city,
-      postalCode: registerForm.postalCode,
-      researchAreas: registerForm.researchAreas,
-      orcid: registerForm.orcid,
-      researcherId: registerForm.researcherId,
-      googleScholar: registerForm.googleScholar,
-      publons: registerForm.publons,
-      scopus: registerForm.scopus,
-      academicDegrees: registerForm.academicDegrees,
-      professionalMemberships: registerForm.professionalMemberships,
-      fundingSources: registerForm.fundingSources,
-      conflictInterests: registerForm.conflictInterests,
-      biography: registerForm.biography
-    })
-
-    const isSuccess = response && (response.code !== undefined ? response.code === 200 : true)
-
-    if (isSuccess) {
-      alert('Registration successful! Please check your email for verification.')
-      showRegister.value = false
-      resetRegisterForm()
-    } else {
-      const message = response?.msg || response?.message || 'Registration failed.'
-      alert(message)
-    }
-  } catch (error) {
-    alert('Registration failed. Please try again.')
-    console.error('Register error:', error)
-  }
-}
-
-const resetRegisterForm = () => {
-  registerForm.username = ''
-  registerForm.email = ''
-  registerForm.password = ''
-  registerForm.confirmPassword = ''
-  registerForm.realName = ''
-  registerForm.affiliation = ''
-  registerForm.department = ''
-  registerForm.title = ''
-  registerForm.position = ''
-  registerForm.phone = ''
-  registerForm.fax = ''
-  registerForm.address = ''
-  registerForm.country = ''
-  registerForm.city = ''
-  registerForm.postalCode = ''
-  registerForm.researchAreas = ''
-  registerForm.orcid = ''
-  registerForm.researcherId = ''
-  registerForm.googleScholar = ''
-  registerForm.publons = ''
-  registerForm.scopus = ''
-  registerForm.academicDegrees = ''
-  registerForm.professionalMemberships = ''
-  registerForm.fundingSources = ''
-  registerForm.conflictInterests = ''
-  registerForm.biography = ''
-  registerForm.agreeTerms = false
 }
 </script>
 
-<style>
+<style scoped>
 @import '../assets/css/submit.css';
 @import '../assets/css/utilities.css';
 
 .submit {
-  padding: 2rem 0;
   min-height: 100vh;
 }
 
-/* Page Header */
-.page-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.page-header h1 {
-  font-size: 2.5rem;
-  color: #1f2937;
-  margin-bottom: 1rem;
-}
-
-.page-header p {
-  font-size: 1.1rem;
-  color: #6b7280;
-}
-
-/* Login Notice */
-.login-notice {
-  max-width: 600px;
-  margin: 0 auto;
-  background: white;
-  border-radius: 12px;
-  padding: 3rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.notice-content h2 {
-  color: #1f2937;
-  margin-bottom: 1rem;
-  font-size: 1.75rem;
-}
-
-.notice-content p {
-  color: #6b7280;
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-}
-
-.notice-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-
-/* Submission Form */
-.submission-form {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.paper-form {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.form-section {
-  margin-bottom: 3rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.form-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.form-section h2 {
-  color: #1f2937;
-  margin-bottom: 2rem;
-  font-size: 1.5rem;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #374151;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.char-count {
-  text-align: right;
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
-}
-
-.file-help {
-  font-size: 0.9rem;
-  color: #6b7280;
-  margin-top: 0.5rem;
-  margin-bottom: 0;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: auto;
-  margin: 0;
-}
-
-.checkbox-label a {
-  color: #3b82f6;
-  text-decoration: none;
-}
-
-.checkbox-label a:hover {
-  text-decoration: underline;
+.progress-step {
+  position: relative;
 }
 
 .form-actions {
   display: flex;
+  justify-content: space-between;
   gap: 1rem;
-  justify-content: flex-end;
   margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+.char-count {
+  text-align: right;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
 }
 
-.modal {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  width: 90%;
-  max-width: 400px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-
-/* Responsive */
-@media (max-width: 768px) {
-  .notice-actions {
-    flex-direction: column;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .paper-form {
-    padding: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-header h1 {
-    font-size: 2rem;
-  }
-  
-  .login-notice {
-    padding: 2rem;
-  }
+.file-help {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
 }
 </style>

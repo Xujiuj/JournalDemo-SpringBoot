@@ -69,6 +69,7 @@ onUnmounted(() => {
 
 <style>
 @import './assets/css/global.css';
+@import './assets/css/forms.css';
 
 /* 回到顶部按钮样式 */
 .back-to-top {
@@ -117,4 +118,3 @@ onUnmounted(() => {
   }
 }
 </style>
-

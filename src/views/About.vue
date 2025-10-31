@@ -72,15 +72,15 @@
                 <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center transition-all duration-300">
                   <i class="text-2xl text-white">👤</i>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-2 transition-colors duration-300">{{ member.teamName }}</h3>
+                <h3 class="text-xl font-bold text-white mb-2 transition-colors duration-300">{{ member.teamUser.userRealName }}</h3>
                 <p class="text-lg font-semibold text-cyan-400 mb-2">{{ member.teamTitle }}</p>
-                <p class="text-slate-200 mb-2">{{ member.teamAffiliation }}</p>
-                <p v-if="member.teamEmail" class="text-sm text-cyan-400 mb-4 transition-colors duration-300">{{ member.teamEmail }}</p>
+                <p class="text-slate-200 mb-2">{{ member.teamUser.userAffiliation }}</p>
+                <p v-if="member.teamUser.userEmail" class="text-sm text-cyan-400 mb-4 transition-colors duration-300">{{ member.teamUser.userEmail }}</p>
               </div>
-              <p v-if="member.teamBio" class="text-slate-300 text-sm mb-4 text-center">{{ member.teamBio }}</p>
-              <div v-if="member.teamResearchArea" class="text-center">
-                <h4 class="text-sm font-semibold text-white mb-2">Research Areas</h4>
-                <p class="text-slate-300 text-sm">{{ member.teamResearchArea }}</p>
+              <p v-if="member.teamUser.userBiography" class="text-slate-300 text-sm mb-4 text-center">{{ member.teamUser.userBiography }}</p>
+              <div v-if="member.teamUser.userKeywords" class="text-center">
+                <h4 class="text-sm font-semibold text-white mb-2">Keywords</h4>
+                <p class="text-slate-300 text-sm">{{ member.teamUser.userKeywords }}</p>
               </div>
             </div>
           </div>
@@ -187,7 +187,7 @@ const loadData = async () => {
       pageSize: 100,
       teamStatus: 1
     })
-
+    console.log(teamResponse)
     editorialTeam.value = extractList(teamResponse)
   } catch (error) {
     console.error('Failed to load data:', error)

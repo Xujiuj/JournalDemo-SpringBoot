@@ -82,6 +82,20 @@ CREATE TABLE IF NOT EXISTS article_file_type (
     sort_order  INT         NOT NULL DEFAULT 0 COMMENT '排序'
 ) COMMENT '文件类型表';
 
+-- 1.8 系统文件表
+CREATE TABLE IF NOT EXISTS sys_file (
+    file_id     BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文件ID',
+    file_name   VARCHAR(255) NOT NULL COMMENT '文件名',
+    file_path   VARCHAR(500) NOT NULL COMMENT '文件路径',
+    file_type   VARCHAR(50)  NULL COMMENT '文件类型',
+    file_size   BIGINT       NULL COMMENT '文件大小(字节)',
+    create_by   VARCHAR(63)  NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
+    update_by   VARCHAR(63)  NULL,
+    update_time DATETIME     NULL,
+    remark      VARCHAR(255) NULL
+) COMMENT '系统文件表';
+
 -- 1.9 学术学位表
 CREATE TABLE IF NOT EXISTS sys_user_academic_degree (
     degree_id   INT         NOT NULL PRIMARY KEY COMMENT '学位ID',
@@ -179,7 +193,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
 -- 2.4 论文表
 CREATE TABLE IF NOT EXISTS article (
     article_id                INT AUTO_INCREMENT COMMENT '论文id' PRIMARY KEY,
-    article_manuscript_id     VARCHAR(63)                        NOT NULL COMMENT '稿件编号',
+    article_manuscript_id     VARCHAR(63)                        NULL COMMENT '稿件编号（格式：JST-YYYY-NNNN）',
     article_title             VARCHAR(255)                       NOT NULL COMMENT '论文标题',
     article_abstract          TEXT                               NULL COMMENT '摘要',
     article_keywords          VARCHAR(511)                       NULL COMMENT '关键词（多个用分号分隔）',
@@ -507,6 +521,7 @@ CREATE INDEX idx_faq_order ON contact_faq(faq_order);
 CREATE INDEX idx_submission_file_article_id ON article_submission_file(file_article_id);
 CREATE INDEX idx_submission_file_type_id ON article_submission_file(file_type_id);
 CREATE INDEX idx_submission_file_upload_time ON article_submission_file(file_upload_time);
+CREATE INDEX idx_sys_file_type ON sys_file(file_type);
 CREATE INDEX idx_suggested_reviewer_article_id ON article_suggested_reviewer(suggested_id);
 CREATE INDEX idx_suggested_reviewer_user_id ON article_suggested_reviewer(suggested_user_id);
 CREATE INDEX idx_suggested_reviewer_status ON article_suggested_reviewer(suggested_status);

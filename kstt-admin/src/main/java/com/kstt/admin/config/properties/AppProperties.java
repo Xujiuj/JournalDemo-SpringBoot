@@ -21,6 +21,7 @@ public class AppProperties {
     private RabbitMqProperties rabbitmq = new RabbitMqProperties();
     private DataSourceProperties datasource = new DataSourceProperties();
     private PerformanceProperties performance = new PerformanceProperties();
+    private MailProperties mail = new MailProperties();
 
     @Data
     public static class CacheProperties {
@@ -52,6 +53,20 @@ public class AppProperties {
         private long verySlowThresholdMs = 3000L;
         private boolean enableMethodMonitor = true;
         private boolean enableApiLog = true;
+    }
+
+    @Data
+    public static class MailProperties {
+        private boolean enabled = true;
+        private ArticleSubmissionProperties articleSubmission = new ArticleSubmissionProperties();
+
+        @Data
+        public static class ArticleSubmissionProperties {
+            private boolean enabled = true;
+            private String to;
+            private String cc;
+            private String subject = "新投稿通知";
+        }
     }
 }
 

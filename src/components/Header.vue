@@ -39,9 +39,8 @@
             <!-- Auth Section -->
             <div class="flex items-center gap-3">
               <!-- User Avatar & Menu (when logged in) -->
-              <div v-if="currentUser" ref="userMenuRef" class="relative">
+              <div v-if="currentUser" ref="userMenuRef" class="relative group" @mouseenter="toggleUserMenu" @mouseleave="toggleUserMenu">
                 <button
-                  @click="toggleUserMenu"
                   class="flex items-center gap-3 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 transform hover:scale-110"
                 >
                   <!-- User Avatar -->
@@ -62,7 +61,8 @@
                 <!-- User Dropdown Menu -->
                 <div
                   v-show="isUserMenuOpen"
-                  class="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-in slide-in-from-top-2 fade-in duration-200"
+                  class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-99"
+                  style="animation: dropdownSlideDown 0.3s ease-out forwards;"
                 >
                   <!-- User Info Header -->
                   <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
@@ -145,7 +145,7 @@
     </div>
 
     <!-- Navigation Bar -->
-    <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 relative">
+    <nav class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 relative z-50">
       <div class="container mx-auto px-4">
         <div class="flex items-center justify-center gap-0">
           <router-link 
@@ -207,7 +207,6 @@ const brandInitial = computed(() => {
 
 // 从 Vuex 获取用户信息
 const currentUser = computed(() => store.getters['user/currentUser'])
-console.log(currentUser)
 const userMenus = computed(() => {
   const menus = store.getters['sysInfo/getMenuList'] || []
   return menus
@@ -258,4 +257,15 @@ onUnmounted(() => {
 
 <style>
 @import '../assets/css/header.css';
+
+@keyframes dropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
 </style>
