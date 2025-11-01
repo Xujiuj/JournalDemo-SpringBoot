@@ -1,6 +1,0 @@
-2025-10-31 09:43:13.960 [RMI TCP Connection(1)-192.168.2.222] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2025-10-31 09:43:13.964 [RMI TCP Connection(1)-192.168.2.222] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
-2025-10-31 09:43:48.625 [RMI TCP Connection(3)-192.168.2.222] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2025-10-31 09:43:48.628 [RMI TCP Connection(3)-192.168.2.222] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
-2025-10-31 09:49:22.515 [RMI TCP Connection(3)-192.168.2.222] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2025-10-31 09:49:22.518 [RMI TCP Connection(3)-192.168.2.222] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
